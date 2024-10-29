@@ -4,12 +4,15 @@ use Alura\Pdo\Domain\Model\Student;
 
 require_once 'vendor/autoload.php';
 
-$pdo = Alura\Pdo\Infrascruture\Persistence\ConnectionCreator::CreateConnection();
+$pdo = \Alura\Pdo\Infrastructure\Persistence\ConnectionCreator::createConnection();
 
 $statement = $pdo->query('SELECT * FROM students;');
-$studentDataList = $statement->fetchAll(fetch_style: PDO::FETCH_ASSOC);
+$studentDataList = $statement->fetchAll(PDO::FETCH_ASSOC);
 
 foreach($studentDataList as $studentData) {
-  $studentList[] = new Student($studentData['id'], $studentData['nome'], new DateTimeImmutable($studentData['birth_date']));
+  $studentList[] = new Student(
+    $studentData['id'], 
+    $studentData['nome'],
+    new DateTimeImmutable($studentData['birth_date']));
 }
 var_dump($studentList);

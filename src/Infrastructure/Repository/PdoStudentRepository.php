@@ -1,30 +1,30 @@
 <?php
 
-namespace Alura\Pdo\Domain\Infrastructure\Repository;
+namespace Alura\Pdo\Infrastructure\Repository;
 
 use Alura\Pdo\Domain\Model\Student;
 use Alura\Pdo\Domain\Repository\StudentRepository;
-use Alura\Pdo\Infrascruture\Persistence\ConnectionCreator;
 use PDO;
-use PDOStatement;
+use RuntimeException;
 
 class PdoStudentRepository implements StudentRepository
 {
-  private \PDO $connection;
+  private PDO $connection;
 
-  public function __construct()
+  public function __construct(PDO $connection)
   {
-    $this->connection = ConnectionCreator::CreateConnection();
+    $this->connection = $connection;
   }
 
-  public function allStudents(): array 
+  public function allStudents(): array
   {
     $sqlQuery = 'SELECT * FROM students;';
-    $stmt = $this->connection->prepare($sqlQuery);
+    $stmt = $this->connection->query($sqlQuery);
+
     return $this->hydrateStudentList($stmt);
   }
 
-  public function studentBirthAt(\DateTimeInterface $birthDate): array 
+  public function studentsBirthAt(\DateTimeInterface $birthDate): array
   {
     $sqlQuery = 'SELECT * FROM students WHERE birth_date = ?;';
     $stmt = $this->connection->prepare($sqlQuery);
@@ -33,16 +33,19 @@ class PdoStudentRepository implements StudentRepository
     return $this->hydrateStudentList($stmt);
   }
 
-  public function hydrateStudentList(PDOStatement $stmt): array
+  private function hydrateStudentList(\PDOStatement $stmt): array
   {
-    $studentDataList = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    foreach($studentDataList as $studentData) {
+    $studentDataList = $stmt->fetchAll();
+    $studentList = [];
+
+    foreach ($studentDataList as $studentData) {
       $studentList[] = new Student(
         $studentData['id'],
         $studentData['nome'],
-        new \DateTimeImmutable($studentData['birth_date']),
+        new \DateTimeImmutable($studentData['birth_date'])
       );
     }
+
     return $studentList;
   }
 
